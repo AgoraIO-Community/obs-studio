@@ -224,6 +224,7 @@ struct SimpleOutput : BasicOutputHandler {
 	void UpdateRecordingSettings_amd_cqp(int cqp);
 	void UpdateRecordingSettings();
 	void UpdateRecordingAudioSettings();
+	void UpdateAgoraSettings(const std::string &appId, const std::string &channel, const std::string &uid, const std::string &resolution, const std::string &token, const bool stringified_uid) override;
 	virtual void Update() override;
 
 	void SetupOutputs();
@@ -243,8 +244,11 @@ struct SimpleOutput : BasicOutputHandler {
 	virtual bool StartReplayBuffer() override;
 	virtual void StopStreaming(bool force) override;
 	virtual void StopRecording(bool force) override;
+	virtual bool StartAgoraStreaming() override;
+	virtual void StopAgoraStreaming(bool force) override;
 	virtual void StopReplayBuffer(bool force) override;
 	virtual bool StreamingActive() const override;
+	virtual bool AgoraStreamingActive() const override;
 	virtual bool RecordingActive() const override;
 	virtual bool ReplayBufferActive() const override;
 };
@@ -398,6 +402,22 @@ SimpleOutput::SimpleOutput(OBSBasic *main_) : BasicOutputHandler(main_)
 			throw "Failed to create recording output "
 			      "(simple output)";
 		obs_output_release(fileOutput);
+
+//		agoraEncodedDataOutput = obs_output_create("agora_encoded_output_info",
+//		                                "simple_agora_encoded_output_info", nullptr, nullptr);
+//		if (!agoraEncodedDataOutput) {
+//		    throw "Failed to create recording output "
+//		    "(agora encoded output)";
+//		}
+//		obs_output_release(agoraEncodedDataOutput);
+
+		agoraRawDataOutput = obs_output_create("agora_raw_output_info",
+                                        "simple_agora_raw_output_info", nullptr, nullptr);
+        if (!agoraRawDataOutput) {
+            throw "Failed to create recording output "
+            "(agora raw data output)";
+		}
+        obs_output_release(agoraRawDataOutput);
 	}
 
 	startRecording.Connect(obs_output_get_signal_handler(fileOutput),
@@ -414,6 +434,22 @@ int SimpleOutput::GetAudioBitrate() const
 					   "ABitrate");
 
 	return FindClosestAvailableAACBitrate(bitrate);
+}
+
+void SimpleOutput::UpdateAgoraSettings(const std::string &appId, const std::string &channel, const std::string &uid, const std::string &resolution, const std::string &token, const bool stringified_uid)
+{
+    obs_data_t *settings = obs_data_create();
+
+    obs_data_set_bool(settings, "ag_xx_stringified", stringified_uid);
+    obs_data_set_string(settings, "ag_xx_uid", uid.c_str());
+    obs_data_set_string(settings, "ag_app_id", appId.c_str());
+    obs_data_set_string(settings, "ag_xx_token", token.c_str());
+    obs_data_set_string(settings, "ag_xx_channel", channel.c_str());
+    obs_data_set_string(settings, "ag_xx_resolution", resolution.c_str());
+
+    obs_output_update(agoraRawDataOutput, settings);
+
+    obs_data_release(settings);
 }
 
 void SimpleOutput::Update()
@@ -658,6 +694,8 @@ inline void SimpleOutput::SetupOutputs()
 		if (ffmpegOutput) {
 			obs_output_set_media(fileOutput, obs_get_video(),
 					     obs_get_audio());
+			obs_output_set_media(agoraRawDataOutput, obs_get_video(),
+						 obs_get_audio());
 		} else {
 			obs_encoder_set_video(h264Recording, obs_get_video());
 			obs_encoder_set_audio(aacRecording, obs_get_audio());
@@ -879,6 +917,11 @@ void SimpleOutput::UpdateRecording()
 		obs_output_set_audio_encoder(replayBuffer, aacRecording, 0);
 	}
 
+//	obs_output_set_video_encoder(agoraEncodedDataOutput, h264Recording);
+//	obs_output_set_audio_encoder(agoraEncodedDataOutput, aacRecording, 0);
+
+    obs_output_set_media(agoraRawDataOutput, obs_get_video(), obs_get_audio());
+
 	recordingConfigured = true;
 }
 
@@ -1027,6 +1070,35 @@ void SimpleOutput::StopRecording(bool force)
 		obs_output_stop(fileOutput);
 }
 
+void SimpleOutput::StopAgoraStreaming(bool force)
+{
+    if (force)
+        obs_output_force_stop(agoraRawDataOutput);
+    else
+        obs_output_stop(agoraRawDataOutput);
+}
+
+bool SimpleOutput::StartAgoraStreaming()
+{
+	if (obs_output_start(agoraRawDataOutput))  {
+		return true;
+	}
+
+	const char *error = obs_output_get_last_error(agoraRawDataOutput);
+	bool hasLastError = error && *error;
+	if (hasLastError)
+		lastError = error;
+	else
+		lastError = string();
+
+	const char *type = "agora";
+
+	blog(LOG_WARNING, "Stream output type '%s' failed to start!%s%s", type,
+	     hasLastError ? "  Last Error: " : "", hasLastError ? error : "");
+
+	return false;
+}
+
 void SimpleOutput::StopReplayBuffer(bool force)
 {
 	if (force)
@@ -1043,6 +1115,11 @@ bool SimpleOutput::StreamingActive() const
 bool SimpleOutput::RecordingActive() const
 {
 	return obs_output_active(fileOutput);
+}
+
+bool SimpleOutput::AgoraStreamingActive() const
+{
+	return obs_output_active(agoraRawDataOutput);
 }
 
 bool SimpleOutput::ReplayBufferActive() const

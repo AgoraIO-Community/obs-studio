@@ -48,6 +48,21 @@ hr "Downloading VLC repo"
 wget --quiet --retry-connrefused --waitretry=1 https://downloads.videolan.org/vlc/3.0.8/vlc-3.0.8.tar.xz
 tar -xf vlc-3.0.8.tar.xz
 
+# Get Agora RTC
+hr "Downloading Agora RTC SDK"
+cd s/plugins/mac-agora/
+TARGET_FRAMEWORK_ZIP=Agora_RTC_SDK.zip
+rm -rf $TARGET_FRAMEWORK_ZIP
+rm -rf Agora_Native_SDK_*
+wget https://download.agora.io/sdk/release/Agora_Native_SDK_for_Mac_v3_0_0_FULL.zip?_ga=2.123658249.304462981.1587318355-1002673356.1530255791 -O $TARGET_FRAMEWORK_ZIP
+UNZIPPED_FOLDER=Agora_RTC
+rm -rf $UNZIPPED_FOLDER
+unzip -j -q $TARGET_FRAMEWORK_ZIP
+unzip -q Agora_Native_SDK_for_Mac_v3_0_0_FULL.zip -d $UNZIPPED_FOLDER
+rm -rf AgoraRtcKit.framework
+mv -f $UNZIPPED_FOLDER/Agora_Native_SDK_for_Mac_FULL/libs/AgoraRtcKit.framework ./
+cd ../../../
+
 # Get sparkle
 hr "Downloading Sparkle framework"
 wget --quiet --retry-connrefused --waitretry=1 -O sparkle.tar.bz2 https://github.com/sparkle-project/Sparkle/releases/download/1.23.0/Sparkle-1.23.0.tar.bz2

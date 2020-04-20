@@ -134,6 +134,72 @@ char *os_get_config_path_ptr(const char *name)
 	return os_get_path_ptr_internal(name, NSUserDomainMask);
 }
 
+char *os_get_agora_log_path_ptr(const char *name)
+{
+    NSSearchPathDomainMask domainMask = NSUserDomainMask;
+
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, domainMask, YES);
+
+    if ([paths count] == 0)
+        bcrash("Could not get home directory (platform-cocoa)");
+
+    NSString *application_support = paths[0];
+
+    NSString *logPath = [NSString stringWithFormat:@"%@/obs-studio/logs/agora-service/", application_support];
+    BOOL pathExist = [[NSFileManager defaultManager] fileExistsAtPath:logPath isDirectory:NO];
+    if (!pathExist) {
+        [[NSFileManager defaultManager] createDirectoryAtPath:logPath withIntermediateDirectories:YES attributes:nil error:nil];
+    }
+
+    NSUInteger len = [logPath
+                      lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
+
+    char *path_ptr = bmalloc(len+1);
+
+    path_ptr[len] = 0;
+
+    memcpy(path_ptr, [logPath UTF8String], len);
+
+    struct dstr path;
+    dstr_init_move_array(&path, path_ptr);
+    dstr_cat(&path, "/");
+    dstr_cat(&path, name);
+    return path.array;
+}
+
+char *os_get_agora_config_path_ptr(const char *name)
+{
+    NSSearchPathDomainMask domainMask = NSUserDomainMask;
+
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, domainMask, YES);
+
+    if ([paths count] == 0)
+        bcrash("Could not get home directory (platform-cocoa)");
+
+    NSString *application_support = paths[0];
+
+    NSString *configPath = [NSString stringWithFormat:@"%@/obs-studio/plugin_config/agora-service", application_support];
+    BOOL pathExist = [[NSFileManager defaultManager] fileExistsAtPath:configPath isDirectory:NO];
+    if (!pathExist) {
+        [[NSFileManager defaultManager] createDirectoryAtPath:configPath withIntermediateDirectories:YES attributes:nil error:nil];
+    }
+
+    NSUInteger len = [configPath
+                      lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
+
+    char *path_ptr = bmalloc(len+1);
+
+    path_ptr[len] = 0;
+
+    memcpy(path_ptr, [configPath UTF8String], len);
+
+    struct dstr path;
+    dstr_init_move_array(&path, path_ptr);
+    dstr_cat(&path, "/");
+    dstr_cat(&path, name);
+    return path.array;
+}
+
 int os_get_program_data_path(char *dst, size_t size, const char *name)
 {
 	return os_get_path_internal(dst, size, name, NSLocalDomainMask);

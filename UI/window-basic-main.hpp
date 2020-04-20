@@ -174,6 +174,10 @@ class OBSBasic : public OBSMainWindow {
 	};
 
 private:
+	std::string local_uid = "";
+	std::string agora_channel = "agora-obs-channel";
+	std::string agora_app_id = "";
+
 	obs_frontend_callbacks *api = nullptr;
 
 	std::shared_ptr<Auth> auth;
@@ -853,6 +857,7 @@ private slots:
 	void on_actionScaleOutput_triggered();
 
 	void on_streamButton_clicked();
+	void on_streamToAgoraButton_clicked();
 	void on_recordButton_clicked();
 	void on_settingsButton_clicked();
 

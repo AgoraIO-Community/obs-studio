@@ -262,7 +262,9 @@ set(obs_SOURCES
 	source-label.cpp
 	remote-text.cpp
 	audio-encoders.cpp
-	qt-wrappers.cpp)
+	qt-wrappers.cpp
+	window-init-agora-widget.cpp
+	ag-http-request.cpp)
 
 set(obs_HEADERS
 	${obs_PLATFORM_HEADERS}
@@ -325,7 +327,9 @@ set(obs_HEADERS
 	remote-text.hpp
 	audio-encoders.hpp
 	qt-wrappers.hpp
-	clickable-label.hpp)
+	clickable-label.hpp
+	window-init-agora-widget.hpp
+	ag-http-request.hpp)
 
 set(obs_importers_HEADERS
 	importers/importers.hpp)
@@ -358,7 +362,8 @@ set(obs_UI
 	forms/OBSUpdate.ui
 	forms/OBSRemux.ui
 	forms/OBSImporter.ui
-	forms/OBSAbout.ui)
+	forms/OBSAbout.ui
+	forms/AgoraWidget.ui)
 
 set(obs_QRC
 	forms/obs.qrc)

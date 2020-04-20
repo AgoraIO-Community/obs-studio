@@ -1133,6 +1133,13 @@
        </property>
       </widget>
      </item>
+    <item>
+      <widget class="QPushButton" name="streamToAgoraButton">
+       <property name="text">
+        <string>Basic.Main.StartAgoraStreaming</string>
+       </property>
+      </widget>
+     </item>
      <item>
       <layout class="QHBoxLayout" name="recordingLayout">
        <property name="spacing">

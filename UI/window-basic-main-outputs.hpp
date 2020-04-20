@@ -8,6 +8,8 @@ struct BasicOutputHandler {
 	OBSOutput fileOutput;
 	OBSOutput streamOutput;
 	OBSOutput replayBuffer;
+//	OBSOutput agoraEncodedDataOutput;
+	OBSOutput agoraRawDataOutput;
 	bool streamingActive = false;
 	bool recordingActive = false;
 	bool delayActive = false;
@@ -37,10 +39,22 @@ struct BasicOutputHandler {
 	virtual bool StartReplayBuffer() { return false; }
 	virtual void StopStreaming(bool force = false) = 0;
 	virtual void StopRecording(bool force = false) = 0;
-	virtual void StopReplayBuffer(bool force = false) { (void)force; }
+	virtual bool StartAgoraStreaming() { return false; }
+	virtual void StopAgoraStreaming(bool force = false) { (void) force; }
+	virtual void StopReplayBuffer(bool force = false) { (void) force; }
 	virtual bool StreamingActive() const = 0;
 	virtual bool RecordingActive() const = 0;
+	virtual bool AgoraStreamingActive() const { return false; }
 	virtual bool ReplayBufferActive() const { return false; }
+
+	virtual void UpdateAgoraSettings(const std::string &appId, const std::string &channel, const std::string &uid, const std::string &resolution, const std::string &token, const bool stringified_uid) {
+		(void) appId;
+		(void) channel;
+		(void) uid;
+		(void) resolution;
+		(void) token;
+		(void) stringified_uid;
+	}
 
 	virtual void Update() = 0;
 

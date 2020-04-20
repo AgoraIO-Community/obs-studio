@@ -56,6 +56,7 @@
 #include "volume-control.hpp"
 #include "remote-text.hpp"
 #include "ui-validation.hpp"
+#include "window-init-agora-widget.hpp"
 #include <fstream>
 #include <sstream>
 
@@ -5949,6 +5950,52 @@ void OBSBasic::on_streamButton_clicked()
 
 		StartStreaming();
 	}
+}
+
+void OBSBasic::on_streamToAgoraButton_clicked()
+{
+    if (outputHandler->AgoraStreamingActive()) {
+        outputHandler->StopAgoraStreaming();
+		ui->streamToAgoraButton->setText(QTStr("Basic.Main.StartAgoraStreaming"));
+		ui->streamToAgoraButton->setEnabled(true);
+		ui->streamToAgoraButton->setChecked(false);
+    } else {
+        AgoraInitWidget initWidget(this);
+        int ret = initWidget.exec();
+        if (QDialog::Accepted != ret) {
+            return;
+        }
+
+        local_uid = initWidget.uid;
+        agora_channel = initWidget.channel;
+        agora_app_id = initWidget.app_id;
+        string resolution = initWidget.resolution;
+        string token = initWidget.token;
+        bool stringified_uid = initWidget.stringified_uid;
+
+        outputHandler->UpdateAgoraSettings(agora_app_id, agora_channel, local_uid, resolution, token, stringified_uid);
+
+        ui->streamToAgoraButton->setText(QTStr("Basic.Main.StopAgoraStreaming"));
+
+        if (!outputHandler->StartAgoraStreaming()) {
+			QString message =
+				!outputHandler->lastError.empty()
+					? QTStr(outputHandler->lastError.c_str())
+					: QTStr("Output.StartFailedGeneric");
+			ui->streamToAgoraButton->setText(QTStr("Basic.Main.StartAgoraStreaming"));
+			ui->streamToAgoraButton->setEnabled(true);
+			ui->streamToAgoraButton->setChecked(false);
+
+			// if (sysTrayStream) {
+			// 	sysTrayStream->setText(ui->streamToAgoraButton->text());
+			// 	sysTrayStream->setEnabled(true);
+			// }
+
+			QMessageBox::critical(this, QTStr("Output.StartStreamFailed"),
+						message);
+			return;
+		}
+    }
 }
 
 void OBSBasic::on_recordButton_clicked()
